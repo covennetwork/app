@@ -11,7 +11,7 @@ export function Card({ children, viewKey }: { children: React.ReactNode; viewKey
 }
 
 export function Label({ children }: { children: React.ReactNode }) {
-  return <p className="text-xs text-white/40 uppercase">{children}</p>
+  return <p className="text-xs text-black/40 uppercase">{children}</p>
 }
 
 export function Title({ children }: { children: React.ReactNode }) {
@@ -35,8 +35,8 @@ export function Slot({
     <button
       type="button"
       onClick={onClick}
-      className={`tap underline decoration-white/25 decoration-2 underline-offset-[0.18em] ${
-        muted ? 'text-white/40' : 'text-white'
+      className={`tap underline decoration-black/25 decoration-2 underline-offset-[0.18em] ${
+        muted ? 'text-black/40' : 'text-black'
       }`}
     >
       {children}
@@ -63,8 +63,8 @@ export function Action({
       disabled={disabled}
       className={
         tone === 'solid'
-          ? `${base} text-[clamp(1.6rem,4vw,2.5rem)] text-white disabled:text-white/20`
-          : `${base} text-[clamp(1rem,2vw,1.25rem)] text-white/45 disabled:text-white/15`
+          ? `${base} text-[clamp(1.6rem,4vw,2.5rem)] text-black disabled:text-black/20`
+          : `${base} text-[clamp(1rem,2vw,1.25rem)] text-black/45 disabled:text-black/15`
       }
     >
       {children}
@@ -74,12 +74,22 @@ export function Action({
 
 export function Nav({ children }: { children: React.ReactNode }) {
   return (
-    <nav className="mt-12 flex flex-wrap items-center gap-x-10 gap-y-4 border-t border-white/10 pt-6">{children}</nav>
+    <nav className="mt-12 flex flex-wrap items-center gap-x-10 gap-y-4 pt-6">{children}</nav>
   )
 }
 
 export function Note({ children }: { children: React.ReactNode }) {
-  return <p className="text-base leading-snug tracking-tight text-white/45">{children}</p>
+  return <p className="text-base leading-snug tracking-tight text-black/45">{children}</p>
+}
+
+export function Dots() {
+  return (
+    <span className="loading-dots" role="status" aria-label="Loading">
+      <span />
+      <span />
+      <span />
+    </span>
+  )
 }
 
 export function Row({ children }: { children: React.ReactNode }) {

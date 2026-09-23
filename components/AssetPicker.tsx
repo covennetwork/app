@@ -36,18 +36,18 @@ export function AssetPicker({
           onSelect={setIndex}
         />
         {selected && (
-          <dl className="space-y-4 text-sm tracking-tight text-white/45">
+          <dl className="space-y-4 text-sm tracking-tight text-black/45">
             <Row>
               <dt>Name</dt>
-              <dd className="text-white">{selected.token.name}</dd>
+              <dd className="text-black">{selected.token.name}</dd>
             </Row>
             <Row>
               <dt>Network</dt>
-              <dd className="text-white">{selected.chainName}</dd>
+              <dd className="text-black">{selected.chainName}</dd>
             </Row>
             <Row>
               <dt>Balance</dt>
-              <dd className="text-white">
+              <dd className="text-black">
                 {selected.balance === undefined
                   ? '—'
                   : `${formatUnitsCompact(selected.balance, selected.token.decimals)} ${selected.token.symbol}`}
@@ -55,13 +55,13 @@ export function AssetPicker({
             </Row>
             <Row>
               <dt>Decimals</dt>
-              <dd className="text-white">{selected.token.decimals}</dd>
+              <dd className="text-black">{selected.token.decimals}</dd>
             </Row>
             <Row>
               <dt>Contract</dt>
-              <dd className="text-white">{shortAddress(selected.token.address)}</dd>
+              <dd className="text-black">{shortAddress(selected.token.address)}</dd>
             </Row>
-            <p className="pt-1 text-[0.78rem] leading-relaxed break-all text-white/30">
+            <p className="pt-1 text-[0.78rem] leading-relaxed break-all text-black/30">
               {selected.token.address}
             </p>
             {selected.token.flags.impersonator && (

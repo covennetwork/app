@@ -1,9 +1,9 @@
 'use client'
 
-import { USDC, arc } from '@covennetwork/sdk'
+import { USDC, arc, type PoolKey } from '@covennetwork/sdk'
 import { useCallback, useEffect, useState } from 'react'
 import type { Address, WalletClient } from 'viem'
-import { coven } from '@/lib/coven'
+import { useCoven } from '@/lib/covenContext'
 import {
   advance,
   clearPending,
@@ -34,6 +34,7 @@ export function useFlow(options: {
   onSettled: () => void
 }) {
   const { wallet, address, switchChain, onSettled } = options
+  const coven = useCoven()
   const [flow, setFlow] = useState<FlowState>()
   const [resumable, setResumable] = useState<PendingFlow>()
 
@@ -86,7 +87,7 @@ export function useFlow(options: {
       current = advance(current, 'swap', 'done')
       update({ steps: current, title: 'Done', detail: undefined, done: true, hash: result.hash })
     },
-    [address, update, wallet],
+    [address, coven, update, wallet],
   )
 
   const resume = useCallback(async () => {
@@ -106,7 +107,7 @@ export function useFlow(options: {
   }, [finishDeposit, onSettled, resumable, update])
 
   const swap = useCallback(
-    async (from: Asset, to: Asset, amountIn: bigint, slippageBps: number) => {
+    async (from: Asset, to: Asset, amountIn: bigint, slippageBps: number, extraPools?: PoolKey[]) => {
       if (!wallet || !address) return
       const steps = stepsFor('swap', false)
       setFlow({ kind: 'swap', steps, title: 'Swapping', done: false })
@@ -118,6 +119,7 @@ export function useFlow(options: {
           tokenOut: to.token.address,
           amountIn,
           slippageBps,
+          ...(extraPools && extraPools.length > 0 ? { extraPools } : {}),
         })
         update({
           steps: advance(advance(steps, 'approve', 'done'), 'swap', 'done'),
@@ -130,7 +132,7 @@ export function useFlow(options: {
         update({ error: errorText(error), title: 'Swap failed', steps: advance(steps, 'swap', 'failed') })
       }
     },
-    [address, onSettled, update, wallet],
+    [address, coven, onSettled, update, wallet],
   )
 
   const bridgeOut = useCallback(
@@ -166,7 +168,7 @@ export function useFlow(options: {
         update({ error: errorText(error), title: 'Send failed' })
       }
     },
-    [address, onSettled, update, wallet],
+    [address, coven, onSettled, update, wallet],
   )
 
   const deposit = useCallback(
@@ -205,7 +207,7 @@ export function useFlow(options: {
         update({ error: errorText(error), title: 'Could not finish' })
       }
     },
-    [address, finishDeposit, onSettled, switchChain, update, wallet],
+    [address, coven, finishDeposit, onSettled, switchChain, update, wallet],
   )
 
   return {

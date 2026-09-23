@@ -1,15 +1,15 @@
 @import "tailwindcss";
 
 @theme {
-  --color-ink: #000000;
-  --color-paper: #ffffff;
+  --color-ink: #000;
+  --color-paper: #000;
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 }
 
 html,
 body {
-  background: #000;
-  color: #fff;
+  background: #EFECE4;
+  color: #000;
   overscroll-behavior: none;
 }
 
@@ -57,11 +57,50 @@ body {
   opacity: 0.55;
 }
 
+@keyframes dot-pulse {
+  0%,
+  80%,
+  100% {
+    opacity: 0.2;
+    transform: scale(0.7);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.loading-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.loading-dots span {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 9999px;
+  background: #000;
+  animation: dot-pulse 1.2s ease-in-out infinite both;
+}
+
+.loading-dots span:nth-child(2) {
+  animation-delay: 0.16s;
+}
+
+.loading-dots span:nth-child(3) {
+  animation-delay: 0.32s;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .view-enter {
     animation: none;
   }
   .tap {
     transition: none;
+  }
+  .loading-dots span {
+    animation: none;
+    opacity: 0.5;
   }
 }

@@ -5,11 +5,15 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPublicClient, erc20Abi, http, type Address } from 'viem'
 import * as chains from 'viem/chains'
 import { REMOTE_CHAINS, arcAsset, remoteAssets, sortAssets, type Asset } from '@/lib/assets'
-import { coven } from '@/lib/coven'
+import { useCoven } from '@/lib/covenContext'
 
 const chainById = (id: number) => Object.values(chains).find((c) => typeof c === 'object' && 'id' in c && c.id === id)
 
-export function useAssets(address?: Address) {
+// `enabled` lets a locked widget skip pool discovery and balance fetching entirely — it only
+// ever touches its two pool tokens, so running the discovery watcher there would add pointless
+// eth_getLogs load to the shared (often rate-limited) Arc RPC.
+export function useAssets(address?: Address, enabled = true) {
+  const coven = useCoven()
   const [tokens, setTokens] = useState<Token[]>(() => coven.tokens.list())
   const [newAddresses, setNewAddresses] = useState<Set<string>>(new Set())
   const [arcBalances, setArcBalances] = useState<Record<string, bigint>>({})
@@ -17,36 +21,46 @@ export function useAssets(address?: Address) {
   const seen = useRef(new Set<string>())
 
   useEffect(() => {
+    if (!enabled) return
     coven.tokens
       .loadCoinGecko()
       .catch(() => undefined)
       .finally(() => setTokens(coven.tokens.list()))
-    const stop = coven.pools.watch({
-      onPools: (pools: Pool[], phase) => {
-        setTokens(coven.tokens.list())
-        if (phase !== 'live') {
-          for (const pool of pools) {
-            seen.current.add(pool.token0.toLowerCase())
-            seen.current.add(pool.token1.toLowerCase())
+    // Defer the watcher one tick so React's StrictMode/HMR remount cancels the throwaway first
+    // pass before it starts. Two concurrent watchers double the eth_getLogs load and trip the
+    // public Arc RPC's rate limit, which kills discovery and leaves every swap with "No route".
+    let stop = () => {}
+    const timer = setTimeout(() => {
+      stop = coven.pools.watch({
+        onPools: (pools: Pool[], phase) => {
+          setTokens(coven.tokens.list())
+          if (phase !== 'live') {
+            for (const pool of pools) {
+              seen.current.add(pool.token0.toLowerCase())
+              seen.current.add(pool.token1.toLowerCase())
+            }
+            return
           }
-          return
-        }
-        const fresh: string[] = []
-        for (const pool of pools) {
-          for (const token of [pool.token0, pool.token1]) {
-            const key = token.toLowerCase()
-            if (key !== USDC.toLowerCase() && !seen.current.has(key)) {
-              seen.current.add(key)
-              fresh.push(key)
+          const fresh: string[] = []
+          for (const pool of pools) {
+            for (const token of [pool.token0, pool.token1]) {
+              const key = token.toLowerCase()
+              if (key !== USDC.toLowerCase() && !seen.current.has(key)) {
+                seen.current.add(key)
+                fresh.push(key)
+              }
             }
           }
-        }
-        if (fresh.length > 0) setNewAddresses((current) => new Set([...current, ...fresh]))
-      },
-      onError: () => undefined,
-    })
-    return stop
-  }, [])
+          if (fresh.length > 0) setNewAddresses((current) => new Set([...current, ...fresh]))
+        },
+        onError: () => undefined,
+      })
+    }, 0)
+    return () => {
+      clearTimeout(timer)
+      stop()
+    }
+  }, [coven, enabled])
 
   const refreshArcBalances = useCallback(async () => {
     if (!address) return setArcBalances({})
@@ -68,7 +82,7 @@ export function useAssets(address?: Address) {
       }
     })
     setArcBalances(next)
-  }, [address])
+  }, [address, coven])
 
   const refreshRemoteBalances = useCallback(async () => {
     if (!address) return setRemoteBalances({})
@@ -94,9 +108,10 @@ export function useAssets(address?: Address) {
   }, [address])
 
   useEffect(() => {
+    if (!enabled) return
     void refreshArcBalances()
     void refreshRemoteBalances()
-  }, [refreshArcBalances, refreshRemoteBalances])
+  }, [enabled, refreshArcBalances, refreshRemoteBalances])
 
   const assets = useMemo(() => {
     const usdcToken = tokens.find((t) => t.address.toLowerCase() === USDC.toLowerCase())

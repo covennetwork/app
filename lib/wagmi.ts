@@ -10,7 +10,7 @@ export const wagmiConfig = createConfig({
   chains: [arc, mainnet, base, arbitrum, optimism, polygon],
   connectors: [
     injected(),
-    coinbaseWallet({ appName: 'Coven', preference: 'all' }),
+    coinbaseWallet({ appName: 'Coven', preference: { options: 'all' } }),
     ...(projectId ? [walletConnect({ projectId, showQrModal: false })] : []),
     safe(),
   ],

@@ -9,7 +9,7 @@ export function Ladder({ steps }: { steps: Step[] }) {
         <li
           key={step.id}
           className={`flex items-center gap-4 text-sm tracking-[0.28em] uppercase transition-opacity duration-300 ${
-            step.state === 'active' ? 'text-white' : step.state === 'done' ? 'text-white/55' : 'text-white/20'
+            step.state === 'active' ? 'text-black' : step.state === 'done' ? 'text-black/55' : 'text-black/20'
           }`}
         >
           <span aria-hidden className="w-5 text-center">

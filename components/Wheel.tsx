@@ -23,7 +23,7 @@ export function Wheel({
     return () => query.removeEventListener('change', sync)
   }, [])
   if (items.length === 0) {
-    return <p className="py-16 text-2xl tracking-tight text-white/40">Nothing here yet.</p>
+    return <p className="py-16 text-2xl tracking-tight text-black/40">Nothing here yet.</p>
   }
   return (
     <div className="h-[clamp(12rem,26vh,16rem)] w-full">
@@ -32,8 +32,8 @@ export function Wheel({
         defaultSelected={start}
         onChange={onSelect}
         side="left"
-        textColor="rgba(255,255,255,0.35)"
-        activeColor="#ffffff"
+        textColor="rgba(0,0,0,0.35)"
+        activeColor="#000"
         fontSize={narrow ? 1.7 : 2.6}
         spacing={narrow ? 1.6 : 1.5}
         blur={2}

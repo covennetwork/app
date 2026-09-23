@@ -26,7 +26,6 @@ export function Qr({ value, size = 320 }: { value: string; size?: number }) {
       height={size}
       role="img"
       aria-label="WalletConnect QR code"
-      className="rounded-[2rem] bg-white p-3"
     >
       <path d={path} fill="#000" />
     </svg>
