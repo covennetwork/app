@@ -6,6 +6,7 @@ import { useCallback, useMemo, useState } from 'react'
 import { type Address, isAddress, parseUnits } from 'viem'
 import { useAccount, useConnect, useDisconnect, usePublicClient, useSwitchChain, useWalletClient } from 'wagmi'
 import { Action, Card, Label, Note, Row, Title } from '@/components/Ui'
+import { useVisibleConnectors } from '@/lib/connectors'
 import { errorText } from '@/lib/flow'
 import { shortAddress } from '@/lib/format'
 import {
@@ -37,6 +38,7 @@ function Field({ label, value, onChange, placeholder, mono }: { label: string; v
 export default function AgentPage() {
   const { address, isConnected, chainId } = useAccount()
   const { connectors, connectAsync } = useConnect()
+  const visibleConnectors = useVisibleConnectors(connectors, { allowSafe: false })
   const { disconnect } = useDisconnect()
   const { switchChainAsync } = useSwitchChain()
   const { data: walletClient } = useWalletClient()
@@ -172,7 +174,7 @@ export default function AgentPage() {
         <Label>Agent</Label>
         <Title>Connect to set up a session.</Title>
         <div className="mt-10 space-y-4">
-          {connectors.slice(0, 4).map((c) => (
+          {visibleConnectors.map((c) => (
             <Action key={c.uid} onClick={() => void connectAsync({ connector: c }).catch((e) => setNote(errorText(e)))}>
               Connect {c.name}
             </Action>

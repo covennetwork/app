@@ -13,6 +13,7 @@ import { Action, Card, Label, Nav, Note, Row, Slot, Title } from '@/components/U
 import { useAssets } from '@/hooks/useAssets'
 import { useFlow } from '@/hooks/useFlow'
 import { assetLabel, type Asset } from '@/lib/assets'
+import { useVisibleConnectors } from '@/lib/connectors'
 import { useCoven } from '@/lib/covenContext'
 import { errorText } from '@/lib/flow'
 import { formatUnitsCompact, parseAmount, shortAddress } from '@/lib/format'
@@ -37,7 +38,6 @@ export default function Page() {
   const [view, setView] = useState<View>('connect')
   const [connecting, setConnecting] = useState<Connector>()
   const [connectError, setConnectError] = useState<string>()
-  const [inIframe, setInIframe] = useState(false)
   const [uri, setUri] = useState<string>()
   const [fromKey, setFromKey] = useState<string>()
   const [toKey, setToKey] = useState<string>()
@@ -72,13 +72,7 @@ export default function Page() {
     setView((current) => (current === 'connect' || current === 'connecting' || current === 'walletconnect' ? 'home' : current))
   }, [isConnected])
 
-  // The Safe connector only has a provider inside the Safe{Wallet} app iframe; elsewhere it always
-  // throws "Provider not found", so it is hidden unless we are actually running as a Safe App.
-  useEffect(() => setInIframe(window.parent !== window), [])
-  const visibleConnectors = useMemo(
-    () => connectors.filter((connector) => connector.type !== 'safe' || inIframe),
-    [connectors, inIframe],
-  )
+  const visibleConnectors = useVisibleConnectors(connectors, { allowSafe: true })
 
   useEffect(() => {
     if (flow) setView('status')

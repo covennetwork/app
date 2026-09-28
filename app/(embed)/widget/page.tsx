@@ -14,6 +14,7 @@ import { useFlow } from '@/hooks/useFlow'
 import { useResolvedPool } from '@/hooks/useResolvedPool'
 import { useWidgetPair } from '@/hooks/useWidgetPair'
 import { assetLabel, type Asset } from '@/lib/assets'
+import { useVisibleConnectors } from '@/lib/connectors'
 import { CovenProvider, useCoven } from '@/lib/covenContext'
 import { errorText } from '@/lib/flow'
 import { formatUnitsCompact, parseAmount, shortAddress } from '@/lib/format'
@@ -211,9 +212,8 @@ function Widget({ config }: { config: WidgetConfig }) {
     [connectAsync],
   )
 
-  // The Safe connector only has a provider inside the Safe{Wallet} app; a generic embed iframe
-  // is not one, so it is always hidden here.
-  const visibleConnectors = useMemo(() => connectors.filter((connector) => connector.type !== 'safe'), [connectors])
+  // A generic embed iframe is not the Safe{Wallet} app, so the Safe connector stays hidden here.
+  const visibleConnectors = useVisibleConnectors(connectors, { allowSafe: false })
 
   const start = useCallback(() => {
     if (!from || !to || amountIn <= 0n) return
