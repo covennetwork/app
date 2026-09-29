@@ -212,8 +212,7 @@ function Widget({ config }: { config: WidgetConfig }) {
     [connectAsync],
   )
 
-  // A generic embed iframe is not the Safe{Wallet} app, so the Safe connector stays hidden here.
-  const visibleConnectors = useVisibleConnectors(connectors, { allowSafe: false })
+  const visibleConnectors = useVisibleConnectors(connectors)
 
   const start = useCallback(() => {
     if (!from || !to || amountIn <= 0n) return

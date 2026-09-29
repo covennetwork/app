@@ -38,7 +38,7 @@ function Field({ label, value, onChange, placeholder, mono }: { label: string; v
 export default function AgentPage() {
   const { address, isConnected, chainId } = useAccount()
   const { connectors, connectAsync } = useConnect()
-  const visibleConnectors = useVisibleConnectors(connectors, { allowSafe: false })
+  const visibleConnectors = useVisibleConnectors(connectors)
   const { disconnect } = useDisconnect()
   const { switchChainAsync } = useSwitchChain()
   const { data: walletClient } = useWalletClient()

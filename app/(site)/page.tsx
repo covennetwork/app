@@ -72,7 +72,7 @@ export default function Page() {
     setView((current) => (current === 'connect' || current === 'connecting' || current === 'walletconnect' ? 'home' : current))
   }, [isConnected])
 
-  const visibleConnectors = useVisibleConnectors(connectors, { allowSafe: true })
+  const visibleConnectors = useVisibleConnectors(connectors)
 
   useEffect(() => {
     if (flow) setView('status')
