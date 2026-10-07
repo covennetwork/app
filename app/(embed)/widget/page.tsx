@@ -10,7 +10,7 @@ import { ConnectView, ConnectingView, WalletConnectView } from '@/components/Con
 import { Ladder } from '@/components/Ladder'
 import { Action, Label, Note, Row, Slot, Title } from '@/components/Ui'
 import { useAssets } from '@/hooks/useAssets'
-import { useFlow } from '@/hooks/useFlow'
+import { useFlow, type SwapDone } from '@/hooks/useFlow'
 import { useResolvedPool } from '@/hooks/useResolvedPool'
 import { useWidgetPair } from '@/hooks/useWidgetPair'
 import { assetLabel, type Asset } from '@/lib/assets'
@@ -47,23 +47,51 @@ function WidgetRoot() {
   if (!mounted) return null
   return (
     <CovenProvider integrator={config.integrator}>
-      <Frame bg={config.bg}>
+      <Frame config={config}>
         <Widget config={config} />
       </Frame>
     </CovenProvider>
   )
 }
 
+const embedded = () => typeof window !== 'undefined' && window.parent !== window
+
+// Tells the host page about a confirmed swap so it can show the trade in its own UI. Amounts are
+// base-unit decimal strings (bigints don't survive JSON). `side` is relative to USDC: `buy` pays
+// USDC, `sell` receives it, `swap` is anything else.
+function postSwap({ hash, from, to, amountIn, amountOut }: SwapDone) {
+  if (!embedded()) return
+  const usdc = USDC.toLowerCase()
+  const token = (asset: Asset) => ({
+    address: asset.token.address,
+    symbol: asset.token.symbol,
+    decimals: asset.token.decimals,
+  })
+  window.parent.postMessage(
+    {
+      type: 'coven:swap',
+      hash,
+      side: from.token.address.toLowerCase() === usdc ? 'buy' : to.token.address.toLowerCase() === usdc ? 'sell' : 'swap',
+      tokenIn: token(from),
+      tokenOut: token(to),
+      amountIn: amountIn.toString(),
+      amountOut: amountOut.toString(),
+    },
+    '*',
+  )
+}
+
 // The widget paints its own surface and reports its height to the host page so the embedding
-// iframe can size itself. Everything lives in one column that fits a narrow embed.
-function Frame({ bg, children }: { bg: string; children: React.ReactNode }) {
+// iframe can size itself. Everything lives in one column that fits a narrow embed. The theme and
+// accent are applied as CSS variables here, so every component below re-inks without props.
+function Frame({ config, children }: { config: WidgetConfig; children: React.ReactNode }) {
   const ref = useRef<HTMLDivElement>(null)
   // Embedded in an iframe the container must size to its content so the host can grow the iframe
   // to fit (a viewport-tied min-height would just report the iframe's current height forever).
   // Opened directly it fills the screen and centers like the main app.
-  const embedded = typeof window !== 'undefined' && window.parent !== window
+  const inFrame = embedded()
   useEffect(() => {
-    if (!embedded) return
+    if (!inFrame) return
     const post = () => {
       const height = ref.current?.offsetHeight ?? document.documentElement.scrollHeight
       window.parent.postMessage({ type: 'coven:resize', height }, '*')
@@ -72,12 +100,17 @@ function Frame({ bg, children }: { bg: string; children: React.ReactNode }) {
     const observer = new ResizeObserver(post)
     if (ref.current) observer.observe(ref.current)
     return () => observer.disconnect()
-  }, [embedded])
+  }, [inFrame])
+  const size = config.compact
+    ? `px-4 py-5 ${inFrame ? '' : 'min-h-dvh'}`
+    : `px-5 py-8 ${inFrame ? 'min-h-[480px]' : 'min-h-dvh'}`
   return (
     <div
       ref={ref}
-      style={{ background: bg }}
-      className={`flex w-full items-center justify-center px-5 py-8 ${embedded ? 'min-h-[480px]' : 'min-h-dvh'}`}
+      data-theme={config.theme}
+      data-layout={config.compact ? 'compact' : undefined}
+      style={{ background: config.bg, ...(config.accent ? { '--color-accent': config.accent } : {}) } as React.CSSProperties}
+      className={`flex w-full items-center justify-center text-black ${size}`}
     >
       <section className="view-enter w-full max-w-md">{children}</section>
     </div>
@@ -140,6 +173,7 @@ function Widget({ config }: { config: WidgetConfig }) {
     address,
     switchChain: (id) => switchChainAsync({ chainId: id }),
     onSettled: () => void refresh(),
+    onSwap: postSwap,
   })
 
   // Open widgets default the pay token to USDC on Arc, matching the main app.
@@ -227,7 +261,13 @@ function Widget({ config }: { config: WidgetConfig }) {
     }, route ${q.hops.map((hop) => hop.protocol).join(' → ')}`
 
   if (view === 'connect') {
-    return <ConnectView connectors={visibleConnectors} onConnect={(connector) => void connect(connector)} />
+    return (
+      <ConnectView
+        connectors={visibleConnectors}
+        onConnect={(connector) => void connect(connector)}
+        hero={!config.compact}
+      />
+    )
   }
 
   if (view === 'connecting') {

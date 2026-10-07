@@ -10,10 +10,18 @@ export type WidgetPool = {
   key?: PoolKey
 }
 
+export type WidgetTheme = 'light' | 'dark'
+
 export type WidgetConfig = {
   integrator?: Integrator
   slippageBps: number
   bg: string
+  /** Ink palette. `dark` is for dark host backgrounds; it also changes the default `bg`. */
+  theme: WidgetTheme
+  /** Hex color for the primary action. Absent means the theme's ink. */
+  accent?: string
+  /** Tighter spacing and smaller headings, with no hero heading on the connect screen. */
+  compact: boolean
   /** Pool the integrator spelled out in full (both tokens given). Used as-is, no lookup. */
   pool?: WidgetPool
   /** A single pool identifier (v3 address or v4 id) to resolve into the pair at runtime. */
@@ -29,14 +37,23 @@ const int = (value: string | null): number | undefined => {
   return Number.isFinite(n) ? Math.trunc(n) : undefined
 }
 
+const HEX_COLOR = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/
+
 // A color safe to drop into `background`: a hex code, or the keyword `transparent`. Anything
-// else (including attempts to smuggle CSS) falls back to the brand paper color.
-const color = (value: string | null): string => {
-  if (!value) return '#EFECE4'
+// else (including attempts to smuggle CSS) falls back to the theme's surface color.
+const color = (value: string | null, fallback: string): string => {
+  if (!value) return fallback
   const v = value.trim()
   if (v.toLowerCase() === 'transparent') return 'transparent'
-  return /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(v) ? v : '#EFECE4'
+  return HEX_COLOR.test(v) ? v : fallback
 }
+
+const hex = (value: string | null): string | undefined => {
+  const v = value?.trim()
+  return v && HEX_COLOR.test(v) ? v : undefined
+}
+
+const flag = (value: string | null): boolean => value !== null && ['1', 'true', ''].includes(value.trim().toLowerCase())
 
 export function parseWidgetConfig(params: URLSearchParams): WidgetConfig {
   const integratorAddress = address(params.get('integrator'))
@@ -67,7 +84,19 @@ export function parseWidgetConfig(params: URLSearchParams): WidgetConfig {
   const poolParam = params.get('pool')?.trim()
   const poolRef = !pool && poolParam && /^0x[0-9a-fA-F]+$/.test(poolParam) ? (poolParam as Hex) : undefined
 
-  return { integrator, slippageBps, bg: color(params.get('bg')), pool, poolRef }
+  const theme: WidgetTheme = params.get('theme')?.trim().toLowerCase() === 'dark' ? 'dark' : 'light'
+  const bg = color(params.get('bg'), theme === 'dark' ? '#0E0E0D' : '#EFECE4')
+
+  return {
+    integrator,
+    slippageBps,
+    bg,
+    theme,
+    accent: hex(params.get('accent')),
+    compact: flag(params.get('compact')),
+    pool,
+    poolRef,
+  }
 }
 
 // A Uniswap pool key requires currency0 < currency1 by address. Integrators pass the pair in

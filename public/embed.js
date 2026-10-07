@@ -14,11 +14,15 @@
  *     data-hooks="0x0000000000000000000000000000000000000000"
  *     data-slippage="50"
  *     data-bg="#EFECE4"
+ *     data-theme="light"
+ *     data-accent="#3355FF"
+ *     data-compact
  *   ></script>
  *
  * The iframe is inserted where the script tag sits, or into the element named by
  * `data-target` (a CSS selector). Omit the pool params for an open widget where the
- * user picks any Arc pair. See WIDGET.md for the full option list.
+ * user picks any Arc pair. Confirmed swaps are posted to the host window as
+ * `coven:swap` messages. See WIDGET.md for the full option list.
  */
 ;(function () {
   var script = document.currentScript
@@ -39,12 +43,17 @@
     'data-hooks': 'hooks',
     'data-slippage': 'slippage',
     'data-bg': 'bg',
+    'data-theme': 'theme',
+    'data-accent': 'accent',
   }
   var params = new URLSearchParams()
   Object.keys(map).forEach(function (attr) {
     var value = script.getAttribute(attr)
     if (value !== null && value !== '') params.set(map[attr], value)
   })
+  // A boolean attribute: present (and not "false") turns it on.
+  var compact = script.getAttribute('data-compact')
+  if (compact !== null && compact !== 'false') params.set('compact', '1')
 
   var iframe = document.createElement('iframe')
   iframe.src = origin + '/widget?' + params.toString()

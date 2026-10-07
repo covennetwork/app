@@ -27,13 +27,16 @@ export type FlowState = {
   hash?: `0x${string}`
 }
 
+export type SwapDone = { hash: `0x${string}`; from: Asset; to: Asset; amountIn: bigint; amountOut: bigint }
+
 export function useFlow(options: {
   wallet?: WalletClient
   address?: Address
   switchChain: (chainId: number) => Promise<unknown>
   onSettled: () => void
+  onSwap?: (swap: SwapDone) => void
 }) {
-  const { wallet, address, switchChain, onSettled } = options
+  const { wallet, address, switchChain, onSettled, onSwap } = options
   const coven = useCoven()
   const [flow, setFlow] = useState<FlowState>()
   const [resumable, setResumable] = useState<PendingFlow>()
@@ -127,12 +130,13 @@ export function useFlow(options: {
           hash: result.hash,
           done: true,
         })
+        onSwap?.({ hash: result.hash, from, to, amountIn, amountOut: result.amountOut })
         onSettled()
       } catch (error) {
         update({ error: errorText(error), title: 'Swap failed', steps: advance(steps, 'swap', 'failed') })
       }
     },
-    [address, coven, onSettled, update, wallet],
+    [address, coven, onSettled, onSwap, update, wallet],
   )
 
   const bridgeOut = useCallback(

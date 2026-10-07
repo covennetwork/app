@@ -32,8 +32,8 @@ export function Wheel({
         defaultSelected={start}
         onChange={onSelect}
         side="left"
-        textColor="rgba(0,0,0,0.35)"
-        activeColor="#000"
+        textColor="color-mix(in oklab, var(--color-black) 35%, transparent)"
+        activeColor="var(--color-black)"
         fontSize={narrow ? 1.7 : 2.6}
         spacing={narrow ? 1.6 : 1.5}
         blur={2}

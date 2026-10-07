@@ -63,7 +63,7 @@ export function Action({
       disabled={disabled}
       className={
         tone === 'solid'
-          ? `${base} text-[clamp(1.6rem,4vw,2.5rem)] text-black disabled:text-black/20`
+          ? `${base} text-[clamp(1.6rem,4vw,2.5rem)] text-[color:var(--color-accent,var(--color-black))] disabled:text-black/20`
           : `${base} text-[clamp(1rem,2vw,1.25rem)] text-black/45 disabled:text-black/15`
       }
     >

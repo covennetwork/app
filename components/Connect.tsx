@@ -12,17 +12,19 @@ export const isTouchDevice = () =>
 export function ConnectView({
   connectors,
   onConnect,
+  hero = true,
 }: {
   connectors: readonly Connector[]
   onConnect: (connector: Connector) => void
+  hero?: boolean
 }) {
   const [index, setIndex] = useState(0)
   const selected = connectors[index]
   return (
     <>
       <Label>Coven</Label>
-      <Title>Swap on Arc.</Title>
-      <div className="mt-8">
+      {hero && <Title>Swap on Arc.</Title>}
+      <div className={hero ? 'mt-8' : 'mt-4'}>
         <Wheel items={connectors.map((c) => c.name)} onSelect={setIndex} />
       </div>
       <div className="mt-10 space-y-4">

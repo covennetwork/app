@@ -23,6 +23,31 @@ body {
   color: #000;
 }
 
+/* Embed themes. Every ink utility (text-black, text-black/45, decoration-black/25, ...) reads
+   --color-black, so redefining it on the widget frame re-inks the whole widget. --color-accent
+   tints the primary action and defaults to the ink. */
+[data-theme='dark'] {
+  --color-black: #efece4;
+  color-scheme: dark;
+}
+
+[data-theme='dark'] ::selection {
+  background: #efece4;
+  color: #000;
+}
+
+/* QR codes stay dark-on-light so every scanner reads them. */
+[data-theme='dark'] .qr {
+  background: #efece4;
+  border-radius: 12px;
+}
+
+/* Compact embed: headings drop from hero scale to a size that fits a sidebar. Unlayered, so it
+   wins over the Title utility classes. */
+[data-layout='compact'] h1 {
+  font-size: clamp(1.4rem, 6vw, 1.9rem);
+}
+
 @keyframes view-in {
   from {
     opacity: 0;
@@ -80,7 +105,7 @@ body {
   width: 0.55rem;
   height: 0.55rem;
   border-radius: 9999px;
-  background: #000;
+  background: var(--color-black);
   animation: dot-pulse 1.2s ease-in-out infinite both;
 }
 

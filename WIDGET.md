@@ -85,6 +85,9 @@ If you already know the pair, spell it out — nothing is resolved at runtime:
 | `data-hooks`          | `hooks`          | Pool hooks address (`0x0…0` for none).                         |
 | `data-slippage`       | `slippage`       | Max slippage in basis points (default `50`).                   |
 | `data-bg`             | `bg`             | Background color (hex, or `transparent`). Default `#EFECE4`.    |
+| `data-theme`          | `theme`          | `light` (default) or `dark`. Dark defaults `bg` to `#0E0E0D`.  |
+| `data-accent`         | `accent`         | Hex color for the primary action.                              |
+| `data-compact`        | `compact`        | Bare attribute / `1`: tighter layout, no hero heading.         |
 | `data-target`         | —                | CSS selector of the element to mount into (default: in place). |
 | `data-width`          | —                | Max iframe width (default `460px`).                            |
 
@@ -104,9 +107,32 @@ for the resize message yourself:
     if (e.data?.type === 'coven:resize') {
       /* set your iframe height to e.data.height */
     }
+    if (e.data?.type === 'coven:swap') {
+      /* a swap confirmed; see "Swap events" below */
+    }
   })
 </script>
 ```
+
+## Swap events
+
+When a swap confirms, the widget posts a message to the host window so you can show the trade in
+your own UI:
+
+```js
+{
+  type: 'coven:swap',
+  hash: '0x…',                 // transaction hash on Arc
+  side: 'buy',                 // relative to USDC: 'buy' paid USDC, 'sell' received it, else 'swap'
+  tokenIn: { address, symbol, decimals },
+  tokenOut: { address, symbol, decimals },
+  amountIn: '1000000',         // base units, as a decimal string
+  amountOut: '4213370000000000000',
+}
+```
+
+Check `event.source === iframe.contentWindow` before trusting it. The React component exposes the
+same payload through its `onSwap` prop.
 
 ## React
 
@@ -131,5 +157,7 @@ it never clashes with your app's own wagmi/wallet setup.
 - The widget only swaps on Arc; if the user's wallet is on another network it prompts them to
   switch. Bridging between chains stays in the full Coven app.
 - The integrator fee is validated against the router's cap; anything above it is clamped.
-- `bg` only accepts a hex color or `transparent` — other values fall back to the brand color, so
-  the widget can't be styled into something misleading.
+- `bg` and `accent` only accept hex colors (`bg` also takes `transparent`) — other values fall
+  back to the theme's defaults, so the widget can't be styled into something misleading.
+- Mobile wallets and QR sign-in need `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` set on the deployment
+  serving `/widget`; without it the WalletConnect connector is left out.
