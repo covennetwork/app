@@ -5,3 +5,7 @@ out/
 *.log
 next-env.d.ts
 .env
+
+# OpenNext / wrangler build output
+.open-next
+.wrangler

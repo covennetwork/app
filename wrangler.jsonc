@@ -1,0 +1,22 @@
+// Cloudflare Workers config for the OpenNext build. Committed so Workers Builds uses this instead of
+// auto-configuring with whatever adapter and Next.js versions are latest at build time.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "app",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-09-26",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "services": [
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "app"
+    }
+  ],
+  "images": {
+    "binding": "IMAGES"
+  }
+}
